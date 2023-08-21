@@ -68,7 +68,7 @@ func main() {
 			alert := payload.Alerts[0]
 			// Only call if alert is firing
 			if alert.Status == "firing" {
-				alertInfo = fmt.Sprintf("Hello, this is an alert from Prometheus. The alert name is %s, the summary is %s. The more info please check telegram and alertmanager.", alert.Labels.Alertname, alert.Annotations.Summary)
+				alertInfo = fmt.Sprintf("The alert name is %s, the summary is %s. The more info please check telegram and alertmanager.", alert.Labels.Alertname, alert.Annotations.Summary)
 			}
 
 			// makeCall(clientParams, callUrl, callTo, callFrom)
