@@ -34,9 +34,10 @@ func main() {
 	callUrl := os.Getenv("TWILIO_CALL_URL")
 	callTo := os.Getenv("TWILIO_CALL_TO")
 	callFrom := os.Getenv("TWILIO_CALL_FROM")
+	webPort := os.Getenv("WEB_PORT")
 
-	if accountSid == "" || authToken == "" || callUrl == "" || callTo == "" || callFrom == "" {
-		fmt.Println("Twilio account SID and/or auth token not provided")
+	if accountSid == "" || authToken == "" || callUrl == "" || callTo == "" || callFrom == "" || webPort == "" {
+		fmt.Println("Missing required environment variables")
 		os.Exit(1)
 	}
 
@@ -78,7 +79,7 @@ func main() {
 		}
 	})
 
-	router.Run(":1337")
+	router.Run(":" + webPort)
 }
 
 func makeCall(clientParams twilio.ClientParams, callUrl string, callTo string, callFrom string) {
