@@ -44,7 +44,7 @@ func main() {
 
 	router := gin.Default()
 
-	router.POST("/answer", func(context *gin.Context) {
+	router.POST("/call", func(context *gin.Context) {
 		var payload AlertManagerPayload
 		if err := context.ShouldBindJSON(&payload); err != nil {
 			context.String(http.StatusBadRequest, "Invalid JSON payload")
