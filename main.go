@@ -14,13 +14,10 @@ type Alert struct {
 	Status      string      `json:"status"`
 	Labels      Labels      `json:"labels"`
 	Annotations Annotations `json:"annotations"`
-	// Additional alert fields...
 }
 
 type Labels struct {
 	Alertname string `json:"alertname"`
-	// Hostname  string `json:"hostname"`
-	// Additional label fields...
 }
 
 type Annotations struct {
@@ -29,13 +26,9 @@ type Annotations struct {
 
 type AlertManagerPayload struct {
 	Alerts []Alert `json:"alerts"`
-	// Additional payload fields...
 }
 
 func main() {
-	// accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
-	// authToken := os.Getenv("TWILIO_AUTH_TOKEN")
-	// callUrl := os.Getenv("TWILIO_CALL_URL")
 	callTo := os.Getenv("TWILIO_CALL_TO")
 	callFrom := os.Getenv("TWILIO_CALL_FROM")
 	webPort := os.Getenv("WEB_PORT")
@@ -44,15 +37,10 @@ func main() {
 		webPort = "1337"
 	}
 
-	// if accountSid == "" || authToken == "" || callUrl == "" || callTo == "" || callFrom == "" || webPort == "" {
-	// 	fmt.Println("Missing required environment variables")
-	// 	os.Exit(1)
-	// }
-
-	// clientParams := twilio.ClientParams{
-	// 	Username: accountSid,
-	// 	Password: authToken,
-	// }
+	if callTo == "" || callFrom == "" {
+		fmt.Println("Please set TWILIO_CALL_TO and TWILIO_CALL_FROM environment variables")
+		os.Exit(1)
+	}
 
 	router := gin.Default()
 
@@ -70,8 +58,6 @@ func main() {
 			if alert.Status == "firing" {
 				alertInfo = fmt.Sprintf("The alert name is %s, the summary is %s. The more info please check telegram and alertmanager.", alert.Labels.Alertname, alert.Annotations.Summary)
 			}
-
-			// makeCall(clientParams, callUrl, callTo, callFrom)
 		}
 
 		twimlResult := fmt.Sprintf("<Response><Say>%s</Say></Response>", alertInfo)
@@ -79,7 +65,6 @@ func main() {
 		client := twilio.NewRestClient()
 
 		params := &api.CreateCallParams{}
-		// params.SetUrl(callUrl)
 		params.SetTo(callTo)
 		params.SetFrom(callFrom)
 		params.SetTwiml(twimlResult)
@@ -94,39 +79,7 @@ func main() {
 				fmt.Println(resp.Sid)
 			}
 		}
-
-		// say := &twiml.VoiceSay{
-		// 	Message: alertInfo,
-		// }
-
-		// twimlResult, err := twiml.Voice([]twiml.Element{say})
-		// if err != nil {
-		// 	context.String(http.StatusInternalServerError, err.Error())
-		// } else {
-		// 	context.Header("Content-Type", "text/xml")
-		// 	context.String(http.StatusOK, twimlResult)
-		// }
 	})
 
 	router.Run(":" + webPort)
 }
-
-// func makeCall(clientParams twilio.ClientParams, callUrl string, callTo string, callFrom string) {
-// 	client := twilio.NewRestClientWithParams(clientParams)
-
-// 	params := &api.CreateCallParams{}
-// 	params.SetUrl(callUrl)
-// 	params.SetTo(callTo)
-// 	params.SetFrom(callFrom)
-
-// 	resp, err := client.Api.CreateCall(params)
-// 	if err != nil {
-// 		fmt.Println(err.Error())
-// 	} else {
-// 		if resp.Sid != nil {
-// 			fmt.Println(*resp.Sid)
-// 		} else {
-// 			fmt.Println(resp.Sid)
-// 		}
-// 	}
-// }
