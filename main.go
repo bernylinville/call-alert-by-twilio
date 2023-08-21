@@ -8,19 +8,23 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/twilio/twilio-go"
 	api "github.com/twilio/twilio-go/rest/api/v2010"
-	"github.com/twilio/twilio-go/twiml"
 )
 
 type Alert struct {
-	Status string `json:"status"`
-	Labels Labels `json:"labels"`
+	Status      string      `json:"status"`
+	Labels      Labels      `json:"labels"`
+	Annotations Annotations `json:"annotations"`
 	// Additional alert fields...
 }
 
 type Labels struct {
 	Alertname string `json:"alertname"`
-	Hostname  string `json:"hostname"`
+	// Hostname  string `json:"hostname"`
 	// Additional label fields...
+}
+
+type Annotations struct {
+	Summary string `json:"summary"`
 }
 
 type AlertManagerPayload struct {
@@ -29,22 +33,26 @@ type AlertManagerPayload struct {
 }
 
 func main() {
-	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
-	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
-	callUrl := os.Getenv("TWILIO_CALL_URL")
+	// accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
+	// authToken := os.Getenv("TWILIO_AUTH_TOKEN")
+	// callUrl := os.Getenv("TWILIO_CALL_URL")
 	callTo := os.Getenv("TWILIO_CALL_TO")
 	callFrom := os.Getenv("TWILIO_CALL_FROM")
 	webPort := os.Getenv("WEB_PORT")
 
-	if accountSid == "" || authToken == "" || callUrl == "" || callTo == "" || callFrom == "" || webPort == "" {
-		fmt.Println("Missing required environment variables")
-		os.Exit(1)
+	if webPort == "" {
+		webPort = "1337"
 	}
 
-	clientParams := twilio.ClientParams{
-		Username: accountSid,
-		Password: authToken,
-	}
+	// if accountSid == "" || authToken == "" || callUrl == "" || callTo == "" || callFrom == "" || webPort == "" {
+	// 	fmt.Println("Missing required environment variables")
+	// 	os.Exit(1)
+	// }
+
+	// clientParams := twilio.ClientParams{
+	// 	Username: accountSid,
+	// 	Password: authToken,
+	// }
 
 	router := gin.Default()
 
@@ -60,44 +68,65 @@ func main() {
 			alert := payload.Alerts[0]
 			// Only call if alert is firing
 			if alert.Status == "firing" {
-				alertInfo = fmt.Sprintf("Alert %s is firing for host %s", alert.Labels.Alertname, alert.Labels.Hostname)
+				alertInfo = fmt.Sprintf("Hello, this is an alert from Prometheus. The alert name is %s, the summary is %s. The more info please check telegram and alertmanager.", alert.Labels.Alertname, alert.Annotations.Summary)
 			}
 
-			makeCall(clientParams, callUrl, callTo, callFrom)
+			// makeCall(clientParams, callUrl, callTo, callFrom)
 		}
 
-		say := &twiml.VoiceSay{
-			Message: alertInfo,
-		}
+		twimlResult := fmt.Sprintf("<Response><Say>%s</Say></Response>", alertInfo)
 
-		twimlResult, err := twiml.Voice([]twiml.Element{say})
+		client := twilio.NewRestClient()
+
+		params := &api.CreateCallParams{}
+		// params.SetUrl(callUrl)
+		params.SetTo(callTo)
+		params.SetFrom(callFrom)
+		params.SetTwiml(twimlResult)
+
+		resp, err := client.Api.CreateCall(params)
 		if err != nil {
-			context.String(http.StatusInternalServerError, err.Error())
+			fmt.Println(err.Error())
 		} else {
-			context.Header("Content-Type", "text/xml")
-			context.String(http.StatusOK, twimlResult)
+			if resp.Sid != nil {
+				fmt.Println(*resp.Sid)
+			} else {
+				fmt.Println(resp.Sid)
+			}
 		}
+
+		// say := &twiml.VoiceSay{
+		// 	Message: alertInfo,
+		// }
+
+		// twimlResult, err := twiml.Voice([]twiml.Element{say})
+		// if err != nil {
+		// 	context.String(http.StatusInternalServerError, err.Error())
+		// } else {
+		// 	context.Header("Content-Type", "text/xml")
+		// 	context.String(http.StatusOK, twimlResult)
+		// }
 	})
 
 	router.Run(":" + webPort)
 }
 
-func makeCall(clientParams twilio.ClientParams, callUrl string, callTo string, callFrom string) {
-	client := twilio.NewRestClientWithParams(clientParams)
+// func makeCall(clientParams twilio.ClientParams, callUrl string, callTo string, callFrom string) {
+// 	client := twilio.NewRestClientWithParams(clientParams)
 
-	params := &api.CreateCallParams{}
-	params.SetUrl(callUrl)
-	params.SetTo(callTo)
-	params.SetFrom(callFrom)
+// 	params := &api.CreateCallParams{}
+// 	params.SetUrl(callUrl)
+// 	params.SetTo(callTo)
+// 	params.SetFrom(callFrom)
 
-	resp, err := client.Api.CreateCall(params)
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		if resp.Sid != nil {
-			fmt.Println(*resp.Sid)
-		} else {
-			fmt.Println(resp.Sid)
-		}
-	}
-}
+// 	resp, err := client.Api.CreateCall(params)
+// 	if err != nil {
+// 		fmt.Println(err.Error())
+// 	} else {
+// 		if resp.Sid != nil {
+// 			fmt.Println(*resp.Sid)
+// 		} else {
+// 			fmt.Println(resp.Sid)
+// 		}
+// 	}
+// }

@@ -10,6 +10,6 @@ services:
       - TWILIO_CALL_URL
       - TWILIO_CALL_TO
       - TWILIO_CALL_FROM
-      - WEB_PORT
+      - WEB_PORT="1337"
     ports:
       - "1337:1337"
