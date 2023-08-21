@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  twilio:
+    image: bernylinville/twilio:test2
+    container_name: twilio
+    environment:
+      - TWILIO_ACCOUNT_SID
+      - TWILIO_AUTH_TOKEN
+      - TWILIO_CALL_URL
+      - TWILIO_CALL_TO
+      - TWILIO_CALL_FROM
+      - WEB_PORT
+    ports:
+      - "1337:1337"
