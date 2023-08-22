@@ -2,7 +2,7 @@ version: "3"
 
 services:
   twilio:
-    image: bernylinville/twilio:latest
+    image: bernylinville/twilio:arm64
     container_name: twilio
     environment:
       - TWILIO_ACCOUNT_SID
