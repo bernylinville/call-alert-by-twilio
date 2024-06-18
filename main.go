@@ -34,7 +34,7 @@ func main() {
 	webPort := os.Getenv("WEB_PORT")
 
 	if webPort == "" {
-		webPort = "1337"
+		webPort = "11337"
 	}
 
 	if callTo == "" || callFrom == "" {
